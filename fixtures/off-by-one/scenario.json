@@ -1,0 +1,7 @@
+{
+  "id": "off-by-one",
+  "name": "Off-by-one array bug",
+  "description": "sumArray uses <= instead of < in the loop bound, causing undefined access and wrong totals.",
+  "entryTestFile": "tests/sumArray.test.ts",
+  "sourceFiles": ["src/sumArray.ts"]
+}
