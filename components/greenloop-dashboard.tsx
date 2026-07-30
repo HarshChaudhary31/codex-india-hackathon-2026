@@ -204,6 +204,8 @@ export function GreenLoopDashboard() {
   const [activeStepIndex, setActiveStepIndex] = useState(-1);
   const [result, setResult] = useState<RepairRunResult | null>(null);
   const [error, setError] = useState<string | null>(null);
+const [sourceCode, setSourceCode] = useState(BUGGY_SNIPPET);
+ 
 
   const stepStatuses = useMemo(
     () => getStepStatuses(activeStepIndex, Boolean(error)),
@@ -228,7 +230,16 @@ export function GreenLoopDashboard() {
     setActiveStepIndex(0);
 
     try {
-      const response = await fetch("/api/repair", { method: "POST" });
+      const response = await fetch("/api/repair", {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json",
+  },
+  body: JSON.stringify({
+    mode: "demo",
+    sourceCode,
+  }),
+});
       const data = (await response.json()) as RepairRunResult & { error?: string };
 
       if (!response.ok || data.error) {
@@ -324,24 +335,41 @@ export function GreenLoopDashboard() {
               </p>
 
               <div className="mt-4 overflow-hidden rounded-lg border border-zinc-800 bg-zinc-950">
-                <div className="border-b border-zinc-800 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-zinc-500">
-                  src/sumArray.ts
-                </div>
-                <pre className="overflow-x-auto p-3 font-mono text-xs leading-relaxed text-zinc-400">
-                  {BUGGY_SNIPPET.split("\n").map((line, index) => (
-                    <div
-                      key={index}
-                      className={
-                        line.includes("<= values.length")
-                          ? "bg-red-500/10 text-red-200"
-                          : undefined
-                      }
-                    >
-                      {line}
-                    </div>
-                  ))}
-                </pre>
-              </div>
+  <div className="flex items-center justify-between border-b border-zinc-800 px-3 py-2">
+    <span className="text-[10px] font-semibold uppercase tracking-wider text-emerald-400">
+      Your Code
+    </span>
+
+    <span className="font-mono text-[10px] text-zinc-600">
+      src/sumArray.ts
+    </span>
+  </div>
+
+  <textarea
+    value={sourceCode}
+    onChange={(event) => setSourceCode(event.target.value)}
+    disabled={running}
+    spellCheck={false}
+    aria-label="Source code to repair"
+    className="min-h-[220px] w-full resize-y bg-zinc-950 p-4 font-mono text-xs leading-relaxed text-zinc-300 outline-none placeholder:text-zinc-700 focus:ring-1 focus:ring-inset focus:ring-emerald-500/50 disabled:opacity-60"
+    placeholder="Paste your TypeScript code here..."
+  />
+
+  <div className="flex items-center justify-between border-t border-zinc-800 px-3 py-2">
+    <span className="text-[10px] text-zinc-600">
+      Edit the code and run the repair workflow
+    </span>
+
+    <button
+      type="button"
+      onClick={() => setSourceCode(BUGGY_SNIPPET)}
+      disabled={running}
+      className="text-xs font-medium text-zinc-400 transition hover:text-white disabled:opacity-50"
+    >
+      Reset Example
+    </button>
+  </div>
+</div>
 
               <button
                 type="button"

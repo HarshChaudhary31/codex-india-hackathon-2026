@@ -14,10 +14,10 @@ import {
   destroyWorkspace,
   loadScenarioDefinition,
   readScenarioSourceFiles,
+  writeWorkspaceFile,
 } from "@/lib/sandbox/workspace";
 import { readFileTool } from "@/lib/tools/read-file";
 import { runTestsInWorkspace } from "@/lib/tools/run-tests";
-import { validateOffByOneScenario } from "@/lib/tools/validate-scenario";
 import { writePatchTool } from "@/lib/tools/write-patch";
 
 function setPhase(
@@ -34,6 +34,7 @@ export async function runRepairWorkflow(options: {
   provider: RepairProvider;
   runId?: string;
   runtimeValidation?: boolean;
+  sourceCode?: string;
 }): Promise<RepairRunResult> {
   assertAllowedScenarioId(options.scenarioId);
 
@@ -41,10 +42,17 @@ export async function runRepairWorkflow(options: {
   const bus = new AgentEventBus(runId);
   let phase: AgentPhase = "idle";
   const snapshot = await createIsolatedWorkspace(options.scenarioId, runId);
+if (options.sourceCode !== undefined) {
+  await writeWorkspaceFile(
+    snapshot,
+    "src/sumArray.ts",
+    options.sourceCode,
+  );
+
+  snapshot.originalFiles["src/sumArray.ts"] = options.sourceCode;
+}
 const runValidation = () =>
-  options.runtimeValidation
-    ? validateOffByOneScenario(snapshot)
-    : runTestsInWorkspace(snapshot.rootPath);
+  runTestsInWorkspace(snapshot.rootPath);
   const scenario = await loadScenarioDefinition(options.scenarioId);
   const patches: PatchProposal[] = [];
   let retryCount = 0;

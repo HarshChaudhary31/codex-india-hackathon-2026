@@ -7,45 +7,37 @@ import { TEST_TIMEOUT_MS, truncateOutput } from "@/lib/security/limits";
 const ALLOWED_COMMAND = "vitest";
 const RUNNER_CONFIG = path.join(process.cwd(), "lib/sandbox/vitest-runner.config.ts");
 
+
+
 function parseVitestSummary(output: string): TestRunResult["summary"] {
-  const lines = output.split("\n");
+  // Remove ANSI terminal color/control codes from Vitest output.
+  const cleanOutput = output.replace(/\x1B\[[0-?]*[ -/]*[@-~]/g, "");
+
   let passed = 0;
   let failed = 0;
+  let total = 0;
 
-  for (const line of lines) {
-    const passMatch = line.match(/^\s*Tests\s+(\d+)\s+passed/i);
-    const failMatch = line.match(/^\s*Tests\s+.*?(\d+)\s+failed/i);
-    const filesPassMatch = line.match(/(\d+)\s+passed\s+\(\d+\)/i);
-    const filesFailMatch = line.match(/(\d+)\s+failed/i);
-
-    if (passMatch) {
-      passed = Number(passMatch[1]);
+  for (const line of cleanOutput.split(/\r?\n/)) {
+    // Parse only the "Tests" summary, never "Test Files".
+    if (!/^\s*Tests\s+/i.test(line)) {
+      continue;
     }
 
-    if (failMatch) {
-      failed = Number(failMatch[1]);
-    }
+    const passMatch = line.match(/(\d+)\s+passed/i);
+    const failMatch = line.match(/(\d+)\s+failed/i);
+    const totalMatch = line.match(/\((\d+)\)\s*$/);
 
-    if (!passMatch && filesPassMatch && line.includes("passed")) {
-      passed = Math.max(passed, Number(filesPassMatch[1]));
-    }
+    passed = passMatch ? Number(passMatch[1]) : 0;
+    failed = failMatch ? Number(failMatch[1]) : 0;
+    total = totalMatch ? Number(totalMatch[1]) : passed + failed;
 
-    if (!failMatch && filesFailMatch && line.toLowerCase().includes("failed")) {
-      failed = Math.max(failed, Number(filesFailMatch[1]));
-    }
-  }
-
-  if (passed === 0 && failed === 0) {
-    const compactPass = output.match(/(\d+)\s+passed/i);
-    const compactFail = output.match(/(\d+)\s+failed/i);
-    passed = compactPass ? Number(compactPass[1]) : 0;
-    failed = compactFail ? Number(compactFail[1]) : 0;
+    break;
   }
 
   return {
     passed,
     failed,
-    total: passed + failed,
+    total,
   };
 }
 

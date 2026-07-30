@@ -15,12 +15,17 @@ const DEMO_SCENARIO_ID = "off-by-one";
 export async function POST(request: NextRequest) {
   try {
     let mode: "demo" | "ai" = "demo";
+    let sourceCode: string | undefined;
 
     try {
       const body = await request.json();
 
       if (body?.mode === "ai") {
         mode = "ai";
+      }
+
+      if (typeof body?.sourceCode === "string") {
+        sourceCode = body.sourceCode;
       }
     } catch {
       // No JSON body means use the safe deterministic demo.
@@ -39,10 +44,11 @@ export async function POST(request: NextRequest) {
         : new OffByOneRepairProvider();
 
     const result = await runRepairWorkflow({
-  scenarioId: DEMO_SCENARIO_ID,
-  provider,
-  runtimeValidation: true,
-});
+      scenarioId: DEMO_SCENARIO_ID,
+      provider,
+      runtimeValidation: true,
+      sourceCode,
+    });
 
     return NextResponse.json({
       ...result,
