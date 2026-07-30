@@ -1,7 +1,14 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  outputFileTracingIncludes: {
+    "/api/repair": [
+      "./node_modules/vitest/**/*",
+      "./node_modules/vite/**/*",
+      "./lib/sandbox/**/*",
+      "./fixtures/**/*",
+    ],
+  },
 };
 
 export default nextConfig;
