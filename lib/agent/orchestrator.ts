@@ -18,6 +18,7 @@ import {
 } from "@/lib/sandbox/workspace";
 import { readFileTool } from "@/lib/tools/read-file";
 import { runTestsInWorkspace } from "@/lib/tools/run-tests";
+import { validateOffByOneScenario } from "@/lib/tools/validate-scenario";
 import { writePatchTool } from "@/lib/tools/write-patch";
 
 function setPhase(
@@ -52,7 +53,9 @@ if (options.sourceCode !== undefined) {
   snapshot.originalFiles["src/sumArray.ts"] = options.sourceCode;
 }
 const runValidation = () =>
-  runTestsInWorkspace(snapshot.rootPath);
+  options.runtimeValidation
+    ? validateOffByOneScenario(snapshot)
+    : runTestsInWorkspace(snapshot.rootPath);
   const scenario = await loadScenarioDefinition(options.scenarioId);
   const patches: PatchProposal[] = [];
   let retryCount = 0;
