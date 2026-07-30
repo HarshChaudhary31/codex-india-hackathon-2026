@@ -4,6 +4,7 @@ const nextConfig: NextConfig = {
   outputFileTracingIncludes: {
     "/api/repair": [
       "./node_modules/vitest/**/*",
+      "./node_modules/@vitest/**/*",
       "./node_modules/vite/**/*",
       "./lib/sandbox/**/*",
       "./fixtures/**/*",
