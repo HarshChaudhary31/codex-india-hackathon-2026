@@ -156,7 +156,7 @@ const runValidation = () =>
         command: "vitest run",
       });
 
-      latestTestResult = await runTestsInWorkspace(snapshot.rootPath);
+      latestTestResult = await runValidation();
       bus.emit("tool_result", phase, "Test run finished.", {
         tool: "run_tests",
         success: latestTestResult.success,
