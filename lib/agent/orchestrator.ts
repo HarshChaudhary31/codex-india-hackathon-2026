@@ -17,6 +17,7 @@ import {
 } from "@/lib/sandbox/workspace";
 import { readFileTool } from "@/lib/tools/read-file";
 import { runTestsInWorkspace } from "@/lib/tools/run-tests";
+import { validateOffByOneScenario } from "@/lib/tools/validate-scenario";
 import { writePatchTool } from "@/lib/tools/write-patch";
 
 function setPhase(
@@ -32,6 +33,7 @@ export async function runRepairWorkflow(options: {
   scenarioId: string;
   provider: RepairProvider;
   runId?: string;
+  runtimeValidation?: boolean;
 }): Promise<RepairRunResult> {
   assertAllowedScenarioId(options.scenarioId);
 
@@ -39,7 +41,10 @@ export async function runRepairWorkflow(options: {
   const bus = new AgentEventBus(runId);
   let phase: AgentPhase = "idle";
   const snapshot = await createIsolatedWorkspace(options.scenarioId, runId);
-
+const runValidation = () =>
+  options.runtimeValidation
+    ? validateOffByOneScenario(snapshot)
+    : runTestsInWorkspace(snapshot.rootPath);
   const scenario = await loadScenarioDefinition(options.scenarioId);
   const patches: PatchProposal[] = [];
   let retryCount = 0;
@@ -48,8 +53,8 @@ export async function runRepairWorkflow(options: {
   let finalTestResult = null;
 
   try {
-    phase = setPhase(bus, "validating", "Running initial tests to confirm failure.");
-    const initialTestResult = await runTestsInWorkspace(snapshot.rootPath);
+  phase = setPhase(bus, "validating", "Running initial tests to confirm failure.");
+  const initialTestResult = await runValidation();
     bus.emit("test_result", phase, "Initial test run completed.", {
       success: initialTestResult.success,
       exitCode: initialTestResult.exitCode,

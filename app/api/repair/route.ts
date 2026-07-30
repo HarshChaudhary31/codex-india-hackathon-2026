@@ -39,9 +39,10 @@ export async function POST(request: NextRequest) {
         : new OffByOneRepairProvider();
 
     const result = await runRepairWorkflow({
-      scenarioId: DEMO_SCENARIO_ID,
-      provider,
-    });
+  scenarioId: DEMO_SCENARIO_ID,
+  provider,
+  runtimeValidation: true,
+});
 
     return NextResponse.json({
       ...result,
