@@ -30,13 +30,42 @@ const WORKFLOW_STEPS: WorkflowStep[] = [
   { id: "complete", label: "Complete" },
 ];
 
-const BUGGY_SNIPPET = `export function sumArray(values: number[]): number {
+type SupportedLanguage = "typescript" | "python" | "cpp" | "c";
+
+const EXAMPLES: Record<SupportedLanguage, string> = {
+  typescript: `export function sumArray(values: number[]): number {
   let total = 0;
   for (let index = 0; index <= values.length; index += 1) {
     total += values[index];
   }
   return total;
-}`;
+}`,
+
+  python: `def sum_array(values):
+    total = 0
+    for index in range(len(values) + 1):
+        total += values[index]
+    return total`,
+
+  cpp: `#include <vector>
+using namespace std;
+
+int sumArray(const vector<int>& values) {
+    int total = 0;
+    for (size_t i = 0; i <= values.size(); ++i) {
+        total += values[i];
+    }
+    return total;
+}`,
+
+  c: `int sumArray(const int values[], int length) {
+    int total = 0;
+    for (int i = 0; i <= length; ++i) {
+        total += values[i];
+    }
+    return total;
+}`,
+};
 
 function getStepStatuses(
   activeStepIndex: number,
@@ -204,7 +233,11 @@ export function GreenLoopDashboard() {
   const [activeStepIndex, setActiveStepIndex] = useState(-1);
   const [result, setResult] = useState<RepairRunResult | null>(null);
   const [error, setError] = useState<string | null>(null);
-const [sourceCode, setSourceCode] = useState(BUGGY_SNIPPET);
+const [language, setLanguage] =
+  useState<SupportedLanguage>("typescript");
+
+const [sourceCode, setSourceCode] =
+  useState(EXAMPLES.typescript);
  
 
   const stepStatuses = useMemo(
@@ -344,6 +377,30 @@ const [sourceCode, setSourceCode] = useState(BUGGY_SNIPPET);
       src/sumArray.ts
     </span>
   </div>
+<div className="mb-3">
+  <label className="mb-2 block text-xs font-semibold uppercase tracking-wider text-zinc-500">
+    Language
+  </label>
+
+  <select
+    value={language}
+    onChange={(event) => {
+      const nextLanguage = event.target.value as SupportedLanguage;
+      setLanguage(nextLanguage);
+      setSourceCode(EXAMPLES[nextLanguage]);
+      setResult(null);
+      setError(null);
+      setActiveStepIndex(-1);
+    }}
+    disabled={running}
+    className="w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm text-zinc-200"
+  >
+    <option value="typescript">TypeScript</option>
+    <option value="python">Python</option>
+    <option value="cpp">C++</option>
+    <option value="c">C</option>
+  </select>
+</div>
 
   <textarea
     value={sourceCode}
@@ -362,7 +419,7 @@ const [sourceCode, setSourceCode] = useState(BUGGY_SNIPPET);
 
     <button
       type="button"
-      onClick={() => setSourceCode(BUGGY_SNIPPET)}
+      onClick={() => setSourceCode(EXAMPLES[language])}
       disabled={running}
       className="text-xs font-medium text-zinc-400 transition hover:text-white disabled:opacity-50"
     >
