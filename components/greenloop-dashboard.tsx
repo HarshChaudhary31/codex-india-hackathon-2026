@@ -291,7 +291,7 @@ const [sourceCode, setSourceCode] =
     } finally {
       setRunning(false);
     }
-  }, [animateWorkflow]);
+    }, [animateWorkflow, sourceCode]);
 
   const initialTest = result?.initialTestResult;
   const finalTest = result?.finalTestResult;
@@ -403,8 +403,13 @@ const [sourceCode, setSourceCode] =
 </div>
 
   <textarea
-    value={sourceCode}
-    onChange={(event) => setSourceCode(event.target.value)}
+  value={sourceCode}
+  onChange={(event) => {
+    setSourceCode(event.target.value);
+    setResult(null);
+    setError(null);
+    setActiveStepIndex(-1);
+  }}
     disabled={running}
     spellCheck={false}
     aria-label="Source code to repair"
@@ -487,19 +492,33 @@ const [sourceCode, setSourceCode] =
                   Initial State
                 </div>
                 {showRed && initialTest ? (
-                  <div className="space-y-2">
-                    <TestBadge
-                      passed={initialTest.summary.passed}
-                      failed={initialTest.summary.failed}
-                      total={initialTest.summary.total}
-                      variant="red"
-                    />
-                    <p className="text-sm font-medium text-red-300/90">RED — tests failing</p>
-                    <p className="text-xs text-zinc-500">
-                      {initialTest.summary.failed} of {initialTest.summary.total} tests failed
-                    </p>
-                  </div>
-                ) : (
+  <div className="space-y-2">
+    <TestBadge
+      passed={initialTest.summary.passed}
+      failed={initialTest.summary.failed}
+      total={initialTest.summary.total}
+      variant={initialTest.success ? "green" : "red"}
+    />
+
+    <p
+      className={`text-sm font-medium ${
+        initialTest.success
+          ? "text-emerald-300/90"
+          : "text-red-300/90"
+      }`}
+    >
+      {initialTest.success
+        ? "GREEN — code already passes all tests"
+        : "RED — tests failing"}
+    </p>
+
+    <p className="text-xs text-zinc-500">
+      {initialTest.success
+        ? `${initialTest.summary.passed} of ${initialTest.summary.total} tests passed`
+        : `${initialTest.summary.failed} of ${initialTest.summary.total} tests failed`}
+    </p>
+  </div>
+) : (
                   <p className="text-sm text-zinc-600">Run repair to validate failing tests</p>
                 )}
               </div>

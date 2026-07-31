@@ -76,8 +76,37 @@ const runValidation = () =>
     });
 
     if (initialTestResult.success) {
-      throw new Error("Scenario is already passing; expected an initial failing test run.");
-    }
+  phase = setPhase(
+    bus,
+    "complete",
+    "Code already passes all tests. No repair needed.",
+  );
+
+  bus.emit(
+    "complete",
+    phase,
+    "All tests already pass. No repair was required.",
+    {
+      retryCount: 0,
+      summary: initialTestResult.summary,
+    },
+  );
+
+  return {
+    runId,
+    scenarioId: options.scenarioId,
+    phase,
+    success: true,
+    initialTestResult,
+    finalTestResult: initialTestResult,
+    plan: null,
+    patches: [],
+    diffs: [],
+    selfReview: null,
+    retryCount: 0,
+    events: bus.list(),
+  };
+}
 
     if (
       initialTestResult.stderr.includes("Startup Error") ||
