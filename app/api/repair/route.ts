@@ -16,6 +16,7 @@ export async function POST(request: NextRequest) {
   try {
     let mode: "demo" | "ai" = "demo";
     let sourceCode: string | undefined;
+    let language: "typescript" | "python" | "cpp" | "c" = "typescript";
 
     try {
       const body = await request.json();
@@ -27,6 +28,14 @@ export async function POST(request: NextRequest) {
       if (typeof body?.sourceCode === "string") {
         sourceCode = body.sourceCode;
       }
+if (
+  body?.language === "typescript" ||
+  body?.language === "python" ||
+  body?.language === "cpp" ||
+  body?.language === "c"
+) {
+  language = body.language;
+}
     } catch {
       // No JSON body means use the safe deterministic demo.
     }
@@ -44,11 +53,12 @@ export async function POST(request: NextRequest) {
         : new OffByOneRepairProvider();
 
     const result = await runRepairWorkflow({
-      scenarioId: DEMO_SCENARIO_ID,
-      provider,
-      runtimeValidation: true,
-      sourceCode,
-    });
+  scenarioId: DEMO_SCENARIO_ID,
+  provider,
+  runtimeValidation: true,
+  sourceCode,
+  language,
+});
 
     return NextResponse.json({
       ...result,

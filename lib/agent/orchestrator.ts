@@ -36,26 +36,37 @@ export async function runRepairWorkflow(options: {
   runId?: string;
   runtimeValidation?: boolean;
   sourceCode?: string;
+  language?: "typescript" | "python" | "cpp" | "c";
 }): Promise<RepairRunResult> {
   assertAllowedScenarioId(options.scenarioId);
 
   const runId: string = options.runId ?? randomUUID();
   const bus = new AgentEventBus(runId);
   let phase: AgentPhase = "idle";
-  const snapshot = await createIsolatedWorkspace(options.scenarioId, runId);
-if (options.sourceCode !== undefined) {
-  await writeWorkspaceFile(
-    snapshot,
-    "src/sumArray.ts",
-    options.sourceCode,
+
+  const snapshot = await createIsolatedWorkspace(
+    options.scenarioId,
+    runId,
   );
 
-  snapshot.originalFiles["src/sumArray.ts"] = options.sourceCode;
-}
-const runValidation = () =>
-  options.runtimeValidation
-    ? validateOffByOneScenario(snapshot)
-    : runTestsInWorkspace(snapshot.rootPath);
+  if (options.sourceCode !== undefined) {
+    await writeWorkspaceFile(
+      snapshot,
+      "src/sumArray.ts",
+      options.sourceCode,
+    );
+
+    snapshot.originalFiles["src/sumArray.ts"] = options.sourceCode;
+  }
+
+  const runValidation = () =>
+    options.runtimeValidation
+      ? validateOffByOneScenario(
+          snapshot,
+          options.language ?? "typescript",
+        )
+      : runTestsInWorkspace(snapshot.rootPath);
+
   const scenario = await loadScenarioDefinition(options.scenarioId);
   const patches: PatchProposal[] = [];
   let retryCount = 0;

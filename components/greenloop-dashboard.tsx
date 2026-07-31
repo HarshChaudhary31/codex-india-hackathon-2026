@@ -269,29 +269,32 @@ const [sourceCode, setSourceCode] =
     "Content-Type": "application/json",
   },
   body: JSON.stringify({
-    mode: "demo",
-    sourceCode,
-  }),
+  mode: "demo",
+  sourceCode,
+  language,
+}),
 });
       const data = (await response.json()) as RepairRunResult & { error?: string };
 
-      if (!response.ok || data.error) {
-        throw new Error(data.error ?? "Repair request failed.");
-      }
+if (!response.ok) {
+  throw new Error(data.error ?? "Repair request failed.");
+}
 
-      setResult(data);
-      await animateWorkflow();
+// Keep failed workflow results so the UI can show
+// initial tests, attempted repair, and final test state.
+setResult(data);
+await animateWorkflow();
 
-      if (!data.success) {
-        setError(data.error ?? "Repair workflow did not succeed.");
-      }
+if (!data.success) {
+  setError(data.error ?? "Repair workflow did not succeed.");
+}
     } catch (err) {
       const message = err instanceof Error ? err.message : "Unexpected error during repair.";
       setError(message);
     } finally {
       setRunning(false);
     }
-    }, [animateWorkflow, sourceCode]);
+    }, [animateWorkflow, sourceCode, language]);
 
   const initialTest = result?.initialTestResult;
   const finalTest = result?.finalTestResult;
@@ -528,21 +531,47 @@ const [sourceCode, setSourceCode] =
                   Final State
                 </div>
                 {showGreen && finalTest ? (
-                  <div className="space-y-2">
-                    <TestBadge
-                      passed={finalTest.summary.passed}
-                      failed={finalTest.summary.failed}
-                      total={finalTest.summary.total}
-                      variant="green"
-                    />
-                    <p className="text-sm font-medium text-emerald-300/90">GREEN — all tests passing</p>
-                    <p className="text-xs text-zinc-500">
-                      {finalTest.summary.passed} of {finalTest.summary.total} tests passed
-                    </p>
-                  </div>
-                ) : (
-                  <p className="text-sm text-zinc-600">Awaiting patch &amp; re-test</p>
-                )}
+  initialTest?.success ? (
+    <div className="space-y-2">
+      <TestBadge
+        passed={finalTest.summary.passed}
+        failed={finalTest.summary.failed}
+        total={finalTest.summary.total}
+        variant="green"
+      />
+
+      <p className="text-sm font-medium text-emerald-300/90">
+        No repair needed
+      </p>
+
+      <p className="text-xs text-zinc-500">
+        Code was already correct.
+      </p>
+    </div>
+  ) : (
+    <div className="space-y-2">
+      <TestBadge
+        passed={finalTest.summary.passed}
+        failed={finalTest.summary.failed}
+        total={finalTest.summary.total}
+        variant="green"
+      />
+
+      <p className="text-sm font-medium text-emerald-300/90">
+        GREEN — all tests passing
+      </p>
+
+      <p className="text-xs text-zinc-500">
+        {finalTest.summary.passed} of {finalTest.summary.total} tests passed
+      </p>
+    </div>
+  )
+) : (
+  <p className="text-sm text-zinc-600">
+    Awaiting patch &amp; re-test
+  </p>
+)}
+                    
               </div>
             </div>
 

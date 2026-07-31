@@ -41,10 +41,33 @@ export class OffByOneRepairProvider implements RepairProvider {
       throw new Error("Expected src/sumArray.ts in workspace.");
     }
 
-    const content = original.replace(
-      "index <= values.length",
-      "index < values.length",
-    );
+    let content = original;
+
+if (/index\s*<=\s*values\.length/.test(content)) {
+  content = content.replace(
+    /index\s*<=\s*values\.length/,
+    "index < values.length",
+  );
+} else if (/range\s*\(\s*len\s*\(\s*values\s*\)\s*\+\s*1\s*\)/.test(content)) {
+  content = content.replace(
+    /range\s*\(\s*len\s*\(\s*values\s*\)\s*\+\s*1\s*\)/,
+    "range(len(values))",
+  );
+} else if (/i\s*<=\s*values\.size\s*\(\s*\)/.test(content)) {
+  content = content.replace(
+    /i\s*<=\s*values\.size\s*\(\s*\)/,
+    "i < values.size()",
+  );
+} else if (/i\s*<=\s*length/.test(content)) {
+  content = content.replace(
+    /i\s*<=\s*length/,
+    "i < length",
+  );
+} else {
+  throw new Error(
+    "No supported off-by-one loop pattern was found.",
+  );
+}
 
     return {
       path: "src/sumArray.ts",
