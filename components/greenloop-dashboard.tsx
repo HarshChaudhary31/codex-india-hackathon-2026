@@ -32,40 +32,6 @@ const WORKFLOW_STEPS: WorkflowStep[] = [
 
 type SupportedLanguage = "typescript" | "python" | "cpp" | "c";
 
-const EXAMPLES: Record<SupportedLanguage, string> = {
-  typescript: `export function sumArray(values: number[]): number {
-  let total = 0;
-  for (let index = 0; index <= values.length; index += 1) {
-    total += values[index];
-  }
-  return total;
-}`,
-
-  python: `def sum_array(values):
-    total = 0
-    for index in range(len(values) + 1):
-        total += values[index]
-    return total`,
-
-  cpp: `#include <vector>
-using namespace std;
-
-int sumArray(const vector<int>& values) {
-    int total = 0;
-    for (size_t i = 0; i <= values.size(); ++i) {
-        total += values[i];
-    }
-    return total;
-}`,
-
-  c: `int sumArray(const int values[], int length) {
-    int total = 0;
-    for (int i = 0; i <= length; ++i) {
-        total += values[i];
-    }
-    return total;
-}`,
-};
 
 function getStepStatuses(
   activeStepIndex: number,
@@ -236,8 +202,7 @@ export function GreenLoopDashboard() {
 const [language, setLanguage] =
   useState<SupportedLanguage>("typescript");
 
-const [sourceCode, setSourceCode] =
-  useState(EXAMPLES.typescript);
+  const [sourceCode, setSourceCode] = useState("");
  
 
   const stepStatuses = useMemo(
@@ -390,7 +355,7 @@ if (!data.success) {
     onChange={(event) => {
       const nextLanguage = event.target.value as SupportedLanguage;
       setLanguage(nextLanguage);
-      setSourceCode(EXAMPLES[nextLanguage]);
+      setSourceCode("");
       setResult(null);
       setError(null);
       setActiveStepIndex(-1);
@@ -420,46 +385,67 @@ if (!data.success) {
     placeholder="Paste your TypeScript code here..."
   />
 
-  <div className="flex items-center justify-between border-t border-zinc-800 px-3 py-2">
-    <span className="text-[10px] text-zinc-600">
-      Edit the code and run the repair workflow
-    </span>
-
-    <button
-      type="button"
-      onClick={() => setSourceCode(EXAMPLES[language])}
-      disabled={running}
-      className="text-xs font-medium text-zinc-400 transition hover:text-white disabled:opacity-50"
-    >
-      Reset Example
-    </button>
-  </div>
+ <div className="border-t border-zinc-800 px-3 py-2">
+  <span className="text-[10px] text-zinc-600">
+    Edit the code and run the repair workflow
+  </span>
+</div>
 </div>
 
-              <button
-                type="button"
-                onClick={runRepair}
-                disabled={running}
-                className="mt-5 flex w-full items-center justify-center gap-2 rounded-lg bg-emerald-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                {running ? (
-                  <>
-                    <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                    </svg>
-                    Running repair workflow…
-                  </>
-                ) : (
-                  <>
-                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    Run Repair
-                  </>
-                )}
-              </button>
+<button
+  type="button"
+  onClick={runRepair}
+  disabled={running}
+  className="mt-5 flex w-full items-center justify-center gap-2 rounded-lg bg-emerald-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-60"
+>
+  {running ? (
+    <>
+      <svg
+        className="h-4 w-4 animate-spin"
+        viewBox="0 0 24 24"
+        fill="none"
+      >
+        <circle
+          className="opacity-25"
+          cx="12"
+          cy="12"
+          r="10"
+          stroke="currentColor"
+          strokeWidth="4"
+        />
+        <path
+          className="opacity-75"
+          fill="currentColor"
+          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+        />
+      </svg>
+      Running repair workflow…
+    </>
+  ) : (
+    <>
+      <svg
+        className="h-4 w-4"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2}
+          d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"
+        />
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2}
+          d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+        />
+      </svg>
+      Run Repair
+    </>
+  )}
+</button>
             </div>
 
             {error && (
