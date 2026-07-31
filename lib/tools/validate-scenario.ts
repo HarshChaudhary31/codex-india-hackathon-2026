@@ -8,41 +8,55 @@ export async function validateOffByOneScenario(
   const startedAt = Date.now();
   const source = await readWorkspaceFile(snapshot, "src/sumArray.ts");
 
-  const hasBug = /index\s*<=\s*values\.length/.test(source);
-  const hasFix = /index\s*<\s*values\.length/.test(source);
+  const tests = [
+    {
+      name: "returns 0 for an empty array",
+      passed:
+        /export\s+function\s+sumArray/.test(source) &&
+        /let\s+total\s*=\s*0/.test(source) &&
+        /return\s+total/.test(source),
+    },
+    {
+      name: "sums positive integers",
+      passed:
+        /index\s*<\s*values\.length/.test(source) &&
+        /total\s*\+=\s*values\s*\[\s*index\s*\]/.test(source),
+    },
+    {
+      name: "sums mixed values",
+      passed:
+        /index\s*<\s*values\.length/.test(source) &&
+        !/index\s*<=\s*values\.length/.test(source) &&
+        /return\s+total/.test(source),
+    },
+  ];
 
-  if (hasFix && !hasBug) {
-    return {
-      success: true,
-      exitCode: 0,
-      stdout:
-        "✓ returns 0 for an empty array\n" +
-        "✓ sums positive integers\n" +
-        "✓ sums mixed values\n\n" +
-        "Tests  3 passed (3)",
-      stderr: "",
-      durationMs: Date.now() - startedAt,
-      summary: {
-        passed: 3,
-        failed: 0,
-        total: 3,
-      },
-    };
-  }
+  const passedTests = tests.filter((test) => test.passed);
+  const failedTests = tests.filter((test) => !test.passed);
+
+  const passed = passedTests.length;
+  const failed = failedTests.length;
+  const total = tests.length;
+
+  const stdout = tests
+    .map((test) => `${test.passed ? "✓" : "✗"} ${test.name}`)
+    .join("\n");
 
   return {
-    success: false,
-    exitCode: 1,
-    stdout: "Tests  3 failed (3)",
+    success: failed === 0,
+    exitCode: failed === 0 ? 0 : 1,
+    stdout:
+      stdout +
+      `\n\nTests  ${passed} passed | ${failed} failed (${total})`,
     stderr:
-      hasBug
-        ? "sumArray reads one index past the end because the loop uses <= values.length."
-        : "sumArray implementation does not satisfy the expected loop-bound repair.",
+      failed === 0
+        ? ""
+        : "The current implementation does not satisfy all sumArray checks.",
     durationMs: Date.now() - startedAt,
     summary: {
-      passed: 0,
-      failed: 3,
-      total: 3,
+      passed,
+      failed,
+      total,
     },
   };
 }
