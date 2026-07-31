@@ -269,7 +269,7 @@ const [sourceCode, setSourceCode] =
     "Content-Type": "application/json",
   },
   body: JSON.stringify({
-  mode: "demo",
+  mode: "ai",
   sourceCode,
   language,
 }),

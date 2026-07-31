@@ -14,11 +14,16 @@ import {
   destroyWorkspace,
   loadScenarioDefinition,
   readScenarioSourceFiles,
+  readWorkspaceFile,
   writeWorkspaceFile,
 } from "@/lib/sandbox/workspace";
 import { readFileTool } from "@/lib/tools/read-file";
 import { runTestsInWorkspace } from "@/lib/tools/run-tests";
 import { validateOffByOneScenario } from "@/lib/tools/validate-scenario";
+import {
+  runUserCode,
+  type SupportedLanguage,
+} from "@/lib/tools/code-runner";
 import { writePatchTool } from "@/lib/tools/write-patch";
 
 function setPhase(
@@ -36,7 +41,7 @@ export async function runRepairWorkflow(options: {
   runId?: string;
   runtimeValidation?: boolean;
   sourceCode?: string;
-  language?: "typescript" | "python" | "cpp" | "c";
+  language?: SupportedLanguage;
 }): Promise<RepairRunResult> {
   assertAllowedScenarioId(options.scenarioId);
 
@@ -59,13 +64,21 @@ export async function runRepairWorkflow(options: {
     snapshot.originalFiles["src/sumArray.ts"] = options.sourceCode;
   }
 
-  const runValidation = () =>
-    options.runtimeValidation
-      ? validateOffByOneScenario(
-          snapshot,
-          options.language ?? "typescript",
-        )
-      : runTestsInWorkspace(snapshot.rootPath);
+  const runValidation = async () => {
+  if (!options.runtimeValidation) {
+    return runTestsInWorkspace(snapshot.rootPath);
+  }
+
+  const code = await readWorkspaceFile(
+    snapshot,
+    "src/sumArray.ts",
+  );
+
+  return runUserCode(
+    options.language ?? "typescript",
+    code,
+  );
+};
 
   const scenario = await loadScenarioDefinition(options.scenarioId);
   const patches: PatchProposal[] = [];
