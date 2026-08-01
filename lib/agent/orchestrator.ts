@@ -221,6 +221,8 @@ export async function runRepairWorkflow(options: {
       });
 
       latestTestResult = await runValidation();
+      console.log("SUMMARY:", latestTestResult.summary);
+console.log("STDERR:", latestTestResult.stderr);
       bus.emit("tool_result", phase, "Test run finished.", {
         tool: "run_tests",
         success: latestTestResult.success,

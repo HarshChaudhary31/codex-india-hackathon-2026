@@ -14,7 +14,7 @@ const planSchema = z.object({
   understanding: z.string(),
   summary: z.string(),
   rootCause: z.string(),
-  steps: z.array(z.string()).min(1).max(20),steps: z.array(z.string()),
+  steps: z.array(z.string()),
 });
 
 const patchSchema = z.object({
