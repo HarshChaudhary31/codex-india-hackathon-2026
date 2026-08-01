@@ -135,41 +135,50 @@ Respond with JSON only.`,
     input: [
       {
         role: "system",
-        content:
-          `You are GreenLoop's general-purpose code repair agent.
+       content:
+`You are GreenLoop's AI Code Repair Agent.
 
-Analyze the actual source code and the latest compiler error,
-runtime error, stdout, stderr, or test failure.
+CRITICAL REQUIREMENTS
 
-Do NOT assume the program is sumArray.
-Do NOT assume the bug is an off-by-one error.
+1. The repaired code MUST remain in the EXACT SAME programming language as the input.
 
-Determine the actual problem from the provided source code and
-execution result.
+Examples:
+- C → C
+- C++ → C++
+- Python → Python
+- TypeScript → TypeScript
 
-Repair the problem while preserving the programming language
-and intended behavior.
+2. Never translate code from one language to another.
 
-Make the smallest reasonable change necessary to fix the problem.
+3. Preserve the original file name, language syntax, imports/includes, and project structure.
 
-Return JSON only in this exact structure:
+4. Fix ONLY the bug that caused the compiler error or failing tests.
+
+5. Make the smallest possible change.
+
+Return ONLY valid JSON in this format:
+
 {
   "path": "original file path",
   "content": "complete corrected source code",
-  "rationale": "explanation of what was wrong and what was fixed"
+  "rationale": "short explanation"
 }
 
-The content field MUST contain the complete corrected program.
-Do not use Markdown code fences.`,
+The "content" field MUST contain the COMPLETE corrected source code in the SAME language as the input.
+
+Do NOT use Markdown code fences.
+`,
      },
 {
   role: "user",
   content: JSON.stringify(
-    {
-      task: "Generate one patch that should make tests pass.",
-scenario: input.scenario,
-plan: input.plan,
-latestTestResult: {
+   {
+  task:
+  "Generate exactly one patch that makes the tests pass. Preserve the original programming language, preserve the original file path, and never translate the code into another language.",
+  language: input.scenario.language,
+  scenario: input.scenario,
+  plan: input.plan,
+  latestTestResult: {
               
               
                 stdout: input.testResult.stdout,
@@ -177,6 +186,7 @@ latestTestResult: {
                 summary: input.testResult.summary,
               },
               files: input.files,
+fileNames: Object.keys(input.files),
               previousAttempts: input.previousAttempts,
               responseShape: {
                 path: "relative/path.ts",

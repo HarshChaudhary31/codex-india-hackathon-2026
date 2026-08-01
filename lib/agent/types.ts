@@ -38,6 +38,7 @@ export interface ScenarioDefinition {
   description: string;
   entryTestFile: string;
   sourceFiles: string[];
+  language?: "typescript" | "python" | "cpp" | "c";
 }
 
 export interface TestRunResult {
