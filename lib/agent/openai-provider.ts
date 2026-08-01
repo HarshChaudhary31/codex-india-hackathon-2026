@@ -14,7 +14,7 @@ const planSchema = z.object({
   understanding: z.string(),
   summary: z.string(),
   rootCause: z.string(),
-  steps: z.array(z.string()).min(1).max(8),
+  steps: z.array(z.string()).min(1).max(20),steps: z.array(z.string()),
 });
 
 const patchSchema = z.object({
@@ -45,11 +45,16 @@ export class OpenAIRepairProvider implements RepairProvider {
   private readonly model: string;
 
   constructor(options?: { apiKey?: string; model?: string }) {
-    this.client = new OpenAI({
-      apiKey: options?.apiKey ?? process.env.OPENAI_API_KEY,
-    });
-    this.model = options?.model ?? process.env.OPENAI_MODEL ?? "gpt-4.1-mini";
-  }
+  this.client = new OpenAI({
+    apiKey: options?.apiKey ?? process.env.GROQ_API_KEY,
+    baseURL: "https://api.groq.com/openai/v1",
+  });
+
+  this.model =
+    options?.model ??
+    process.env.GROQ_MODEL ??
+    "deepseek-r1-distill-llama-70b";
+}
 
   async understand(input: {
     scenario: ScenarioDefinition;
