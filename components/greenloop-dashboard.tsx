@@ -199,10 +199,17 @@ export function GreenLoopDashboard() {
   const [activeStepIndex, setActiveStepIndex] = useState(-1);
   const [result, setResult] = useState<RepairRunResult | null>(null);
   const [error, setError] = useState<string | null>(null);
-const [language, setLanguage] =
-  useState<SupportedLanguage>("typescript");
+const language = "typescript";
 
-  const [sourceCode, setSourceCode] = useState("");
+  const [sourceCode, setSourceCode] = useState(`export function sumArray(values: number[]): number {
+  let total = 0;
+
+  for (let i = 0; i <= values.length; i++) {
+    total += values[i];
+  }
+
+  return total;
+}`);
  
 
   const stepStatuses = useMemo(
@@ -236,7 +243,6 @@ const [language, setLanguage] =
   body: JSON.stringify({
   mode: "ai",
   sourceCode,
-  language,
 }),
 });
       const data = (await response.json()) as RepairRunResult & { error?: string };
@@ -319,21 +325,10 @@ if (!data.success) {
               <div className="mb-1 text-xs font-semibold uppercase tracking-wider text-emerald-400/80">
                 Scenario
               </div>
-              <h2 className="text-lg font-semibold text-white">Off-by-One Bug</h2>
-              <p className="mt-2 text-sm leading-relaxed text-zinc-400">
-                <code className="rounded bg-zinc-800 px-1.5 py-0.5 font-mono text-xs text-zinc-300">
-                  sumArray
-                </code>{" "}
-                uses{" "}
-                <code className="rounded bg-red-500/15 px-1.5 py-0.5 font-mono text-xs text-red-300">
-                  &lt;=
-                </code>{" "}
-                instead of{" "}
-                <code className="rounded bg-emerald-500/15 px-1.5 py-0.5 font-mono text-xs text-emerald-300">
-                  &lt;
-                </code>{" "}
-                in the loop bound, causing undefined access and wrong totals.
-              </p>
+              <h2 className="text-lg font-semibold text-white">AI TypeScript Code Repair</h2>
+           <p className="mt-2 text-sm leading-relaxed text-zinc-400">
+  Automatically detects, repairs, validates, and reviews TypeScript code using an AI-driven repair workflow.
+</p>
 
               <div className="mt-4 overflow-hidden rounded-lg border border-zinc-800 bg-zinc-950">
   <div className="flex items-center justify-between border-b border-zinc-800 px-3 py-2">
@@ -350,24 +345,7 @@ if (!data.success) {
     Language
   </label>
 
-  <select
-    value={language}
-    onChange={(event) => {
-      const nextLanguage = event.target.value as SupportedLanguage;
-      setLanguage(nextLanguage);
-      setSourceCode("");
-      setResult(null);
-      setError(null);
-      setActiveStepIndex(-1);
-    }}
-    disabled={running}
-    className="w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm text-zinc-200"
-  >
-    <option value="typescript">TypeScript</option>
-    <option value="python">Python</option>
-    <option value="cpp">C++</option>
-    <option value="c">C</option>
-  </select>
+  
 </div>
 
   <textarea
@@ -476,93 +454,82 @@ if (!data.success) {
             </div>
 
             <div className="grid gap-4 sm:grid-cols-2">
-              <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
-                <div className="mb-2 text-xs font-semibold uppercase tracking-wider text-zinc-500">
-                  Initial State
-                </div>
-                {showRed && initialTest ? (
-  <div className="space-y-2">
-    <TestBadge
-      passed={initialTest.summary.passed}
-      failed={initialTest.summary.failed}
-      total={initialTest.summary.total}
-      variant={initialTest.success ? "green" : "red"}
-    />
+  {/* Initial State */}
+  <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
+    <div className="mb-2 text-xs font-semibold uppercase tracking-wider text-zinc-500">
+      Initial State
+    </div>
 
-    <p
-      className={`text-sm font-medium ${
-        initialTest.success
-          ? "text-emerald-300/90"
-          : "text-red-300/90"
-      }`}
-    >
-      {initialTest.success
-        ? "GREEN — code already passes all tests"
-        : "RED — tests failing"}
-    </p>
+    {showRed && initialTest ? (
+      <div className="space-y-2">
+        <TestBadge
+          passed={initialTest.summary.passed}
+          failed={initialTest.summary.failed}
+          total={initialTest.summary.total}
+          variant={initialTest.success ? "green" : "red"}
+        />
 
-    <p className="text-xs text-zinc-500">
-      {initialTest.success
-        ? `${initialTest.summary.passed} of ${initialTest.summary.total} tests passed`
-        : `${initialTest.summary.failed} of ${initialTest.summary.total} tests failed`}
-    </p>
+        <p
+          className={`text-sm font-medium ${
+            initialTest.success
+              ? "text-emerald-300"
+              : "text-red-300"
+          }`}
+        >
+          {initialTest.success
+            ? "GREEN — code already passes all tests"
+            : "RED — tests failing"}
+        </p>
+
+        <p className="text-xs text-zinc-500">
+          {initialTest.success
+            ? `${initialTest.summary.passed} of ${initialTest.summary.total} tests passed`
+            : `${initialTest.summary.failed} of ${initialTest.summary.total} tests failed`}
+        </p>
+      </div>
+    ) : (
+      <p className="text-sm text-zinc-600">
+        Click{" "}
+        <span className="font-medium text-emerald-400">
+          Run Repair
+        </span>{" "}
+        to analyze your TypeScript code.
+      </p>
+    )}
   </div>
-) : (
-                  <p className="text-sm text-zinc-600">Run repair to validate failing tests</p>
-                )}
-              </div>
 
-              <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
-                <div className="mb-2 text-xs font-semibold uppercase tracking-wider text-zinc-500">
-                  Final State
-                </div>
-                {showGreen && finalTest ? (
-  initialTest?.success ? (
-    <div className="space-y-2">
-      <TestBadge
-        passed={finalTest.summary.passed}
-        failed={finalTest.summary.failed}
-        total={finalTest.summary.total}
-        variant="green"
-      />
-
-      <p className="text-sm font-medium text-emerald-300/90">
-        No repair needed
-      </p>
-
-      <p className="text-xs text-zinc-500">
-        Code was already correct.
-      </p>
+  {/* Final State */}
+  <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
+    <div className="mb-2 text-xs font-semibold uppercase tracking-wider text-zinc-500">
+      Final State
     </div>
-  ) : (
-    <div className="space-y-2">
-      <TestBadge
-        passed={finalTest.summary.passed}
-        failed={finalTest.summary.failed}
-        total={finalTest.summary.total}
-        variant="green"
-      />
 
-      <p className="text-sm font-medium text-emerald-300/90">
-        GREEN — all tests passing
+    {showGreen && finalTest ? (
+      <div className="space-y-2">
+        <TestBadge
+          passed={finalTest.summary.passed}
+          failed={finalTest.summary.failed}
+          total={finalTest.summary.total}
+          variant="green"
+        />
+
+        <p className="text-sm font-medium text-emerald-300">
+          ✅ Repair completed successfully
+        </p>
+
+        <p className="text-xs text-zinc-500">
+          All validation tests passed successfully.
+        </p>
+      </div>
+    ) : (
+      <p className="text-sm text-zinc-600">
+        Waiting for AI repair and validation.
       </p>
-
-      <p className="text-xs text-zinc-500">
-        {finalTest.summary.passed} of {finalTest.summary.total} tests passed
-      </p>
-    </div>
-  )
-) : (
-  <p className="text-sm text-zinc-600">
-    Awaiting patch &amp; re-test
-  </p>
-)}
-                    
-              </div>
-            </div>
-
+    )}
+  </div>
+</div>
             {activeStepIndex >= 1 && understandingEvent && (
-              <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-5">
+  <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-5">
                 <div className="mb-2 text-xs font-semibold uppercase tracking-wider text-zinc-500">
                   Root Cause
                 </div>
@@ -580,6 +547,7 @@ if (!data.success) {
                 <p className="mt-2 text-sm text-zinc-400">{understandingEvent.message}</p>
               </div>
             )}
+            
 
             {showPlan && plan && (
               <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-5">
