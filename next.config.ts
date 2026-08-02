@@ -6,6 +6,8 @@ const nextConfig: NextConfig = {
       "./node_modules/vitest/**/*",
       "./node_modules/@vitest/**/*",
       "./node_modules/vite/**/*",
+      "./node_modules/tsx/**/*",
+      "./node_modules/esbuild/**/*",
       "./lib/sandbox/**/*",
       "./fixtures/**/*",
     ],
